@@ -8,12 +8,16 @@ import de.m3y3r.nstmp.handler.codec.smtp.SessionInitiationHandler;
 import de.m3y3r.nstmp.handler.codec.smtp.SmtpCommandHandler;
 import de.m3y3r.nstmp.handler.codec.smtp.SmtpReplyEncoder;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 
 /**
  * SMTP delivery system
@@ -41,6 +45,9 @@ public class Server implements Runnable {
 		EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 		try {
 			ServerBootstrap b = new ServerBootstrap();
+			byte[] CRLF = {'\r', '\n'};
+			ByteBuf delimiter = Unpooled.buffer(2).writeBytes(CRLF);
+
 			b.group(eventLoopGroup)
 				.channel(NioServerSocketChannel.class)
 				.localAddress(new InetSocketAddress(port))
@@ -48,8 +55,9 @@ public class Server implements Runnable {
 					@Override
 					protected void initChannel(SocketChannel ch) throws Exception {
 						ch.pipeline().addLast("smtpOutReply", new SmtpReplyEncoder());
-						ch.pipeline().addLast("smptIn1", new SessionInitiationHandler());
-						ch.pipeline().addLast("smptIn2", new SmtpCommandHandler());
+						ch.pipeline().addLast("smptInSession", new SessionInitiationHandler());
+						ch.pipeline().addLast("smtpInLine", new DelimiterBasedFrameDecoder(Config.INSTANCE.getMaxCommandLen(), true, delimiter));
+						ch.pipeline().addLast("smptInCommand", new SmtpCommandHandler());
 					}
 				});
 			ChannelFuture f = b.bind().sync();

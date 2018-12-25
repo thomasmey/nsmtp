@@ -1,5 +1,7 @@
 package de.m3y3r.nstmp.handler.codec.smtp.model;
 
+import io.netty.util.AsciiString;
+
 public class SmtpCommandReply {
 
 	private final SmtpReplyStatus replyCode;
