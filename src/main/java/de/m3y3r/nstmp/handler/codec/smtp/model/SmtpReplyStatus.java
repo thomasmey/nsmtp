@@ -5,7 +5,11 @@ public class SmtpReplyStatus {
 	public static final SmtpReplyStatus R220 = new SmtpReplyStatus((short) 220);
 	public static final SmtpReplyStatus R221 = new SmtpReplyStatus((short) 221);
 	public static final SmtpReplyStatus R250 = new SmtpReplyStatus((short) 250);
+	
 	public static final SmtpReplyStatus R354 = new SmtpReplyStatus((short) 354);
+
+	public static final SmtpReplyStatus R450 = new SmtpReplyStatus((short) 450);
+
 	public static final SmtpReplyStatus R500 = new SmtpReplyStatus((short) 500);
 	public static final SmtpReplyStatus R502 = new SmtpReplyStatus((short) 502);
 

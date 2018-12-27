@@ -1,6 +1,7 @@
 package de.m3y3r.nstmp.handler.codec.smtp;
 
 import de.m3y3r.nstmp.Config;
+import de.m3y3r.nstmp.handler.codec.smtp.model.SessionContext;
 import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpCommandReply;
 import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpReplyStatus;
 import io.netty.channel.ChannelHandlerContext;
@@ -22,10 +23,12 @@ public class SessionInitiationHandler extends ChannelInboundHandlerAdapter {
 	 */
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		SessionContext sc = new SessionContext();
+		Attribute<SessionContext> sessionStarted = ctx.channel().attr(SessionContext.ATTRIBUTE_KEY);
+		sessionStarted.set(sc);
+
 		SmtpCommandReply reply = new SmtpCommandReply(SmtpReplyStatus.R220, Config.INSTANCE.getDomain());
 		ctx.writeAndFlush(reply);
-		Attribute<Boolean> sessionStarted = ctx.channel().attr(AttributeKey.valueOf("sessionStarted"));
-		sessionStarted.set(true);
 	}
 
 }

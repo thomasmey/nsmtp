@@ -5,9 +5,9 @@ import io.netty.util.AsciiString;
 public class SmtpCommandReply {
 
 	private final SmtpReplyStatus replyCode;
-	private final String text;
+	private final CharSequence text;
 
-	public SmtpCommandReply(SmtpReplyStatus statusCode, String text) {
+	public SmtpCommandReply(SmtpReplyStatus statusCode, CharSequence text) {
 		replyCode = statusCode;
 		this.text = text;
 	}
@@ -16,7 +16,7 @@ public class SmtpCommandReply {
 		return replyCode;
 	}
 
-	public String getText() {
+	public CharSequence getText() {
 		return text;
 	}
 }

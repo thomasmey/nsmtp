@@ -2,16 +2,16 @@ package de.m3y3r.nstmp.handler.codec.smtp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
 import de.m3y3r.nstmp.handler.codec.smtp.model.MailTransaction;
+import de.m3y3r.nstmp.handler.codec.smtp.model.SessionContext;
 import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpCommandReply;
 import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpReplyStatus;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.smtp.SmtpCommand;
 import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 
 /**
  * RFC2821 SMTP server
@@ -26,34 +26,34 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		ByteBuf frame = (ByteBuf) msg;
 
-		if(!isSessionStarted(ctx)) {
+		if(!isSessionContext(ctx)) {
 			/* we did receive an command before we send an initial greetings reply */
 			/* what to do here? is it possible to send a reply here?
 			 */
 			return;
 		}
 
-		String line = frame.toString(StandardCharsets.US_ASCII);
-		System.out.println(line);
-
-		if(line.length() < 4) {
-			throw new UnknownCommandException(line);
+		if(frame.readableBytes() < 4) {
+			throw new UnknownCommandException("");
 		}
 
-		String cmd = line.substring(0, 4);
-		String argument = line.length() > 4 ? line.substring(4) : null;
+		SessionContext sessionContext = ctx.channel().attr(SessionContext.ATTRIBUTE_KEY).get();
+
+		CharSequence line = frame.readCharSequence(frame.readableBytes(), StandardCharsets.US_ASCII);
+		CharSequence cmd = line.subSequence(0, 4);
+		CharSequence argument = line.length() > 4 ? line.subSequence(4, line.length()) : null;
 
 		validateCommand(cmd);
-		validateCommandOrder(ctx, cmd);
+		validateCommandOrder(sessionContext, cmd);
 
 		/* process command */
 
 		/* 4.5.1 Minimum Implementation */
-		switch (cmd) {
+		switch (cmd.toString()) { //FIXME: compare by Charsequence if possible
 		case "EHLO":
 		{
-			resetState(ctx);
-			String domainOrAddressLiteral = argument;
+			resetMailTransaction(sessionContext);
+			CharSequence domainOrAddressLiteral = argument;
 			String greeting = "Greetings from Netty SMTP server";
 			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, domainOrAddressLiteral + " " + greeting);
 			ctx.writeAndFlush(reply);
@@ -68,10 +68,11 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 
 		case "MAIL":
 		{
-			Attribute<MailTransaction> mailTx = ctx.channel().attr(AttributeKey.valueOf("mailTransaction"));
-			MailTransaction mailTxR = new MailTransaction();
-			mailTx.set(mailTxR);
-			mailTxR.setFrom(argument);
+
+			MailTransaction mailTx = new MailTransaction();
+			mailTx.setFrom(argument);
+
+			sessionContext.mailTransaction = mailTx;
 
 			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
 			ctx.writeAndFlush(reply);
@@ -80,9 +81,8 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 
 		case "RCPT":
 		{
-			Attribute<MailTransaction> mailTx = ctx.channel().attr(AttributeKey.valueOf("mailTransaction"));
-			MailTransaction mailTxR = mailTx.get();
-			mailTxR.addTo(argument);
+			MailTransaction mailTx = sessionContext.mailTransaction;
+			mailTx.addTo(argument);
 
 			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
 			ctx.writeAndFlush(reply);
@@ -110,7 +110,7 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 		 */
 		case "RSET":
 		{
-			resetState(ctx); // abort any ongoing mail transaction
+			resetMailTransaction(sessionContext); // abort any ongoing mail transaction
 			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
 			ctx.writeAndFlush(reply);
 			break;
@@ -153,58 +153,63 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 			break;
 		}
 		}
+
+		sessionContext.lastCmd = cmd;
 	}
 
-	private void resetState(ChannelHandlerContext ctx) {
-		Attribute<MailTransaction> mailTx = ctx.channel().attr(AttributeKey.valueOf("mailTransaction"));
-		mailTx.set(null);
+	private void resetMailTransaction(SessionContext ctx) {
+		ctx.mailTransaction = null;
 	}
 
 	/**
-	 * was this session started at all, by sending an greetings reply?
+	 * was this session started at all?
 	 * @param ctx
 	 * @return 
 	 */
-	private boolean isSessionStarted(ChannelHandlerContext ctx) {
-		Attribute<Boolean> sessionStarted = ctx.channel().attr(AttributeKey.valueOf("sessionStarted"));
-		return sessionStarted.get() != null ? sessionStarted.get() : false;
+	private boolean isSessionContext(ChannelHandlerContext ctx) {
+		Attribute<SessionContext> sessionStarted = ctx.channel().attr(SessionContext.ATTRIBUTE_KEY);
+		return sessionStarted.get() != null;
 	}
 
-	private boolean verifyUserOrMailbox(String argument) {
+	private boolean verifyUserOrMailbox(CharSequence argument) {
 		return false;
 	}
+
+	private static final CharSequence[] ALWAYS_ALLOWED_COMMANDS = new String[] {"HELO", "EHLO", "RSET"};
 
 	/**
 	 * is the command allowed in the current state
 	 * @param ctx
-	 * @param currentCmd
+	 * @param cmd
 	 */
-	private void validateCommandOrder(ChannelHandlerContext ctx, String currentCmd) {
-		Attribute<String> lastCmd = ctx.channel().attr(AttributeKey.valueOf("lastCmd"));
-		if(currentCmd.equals("HELO") || currentCmd.equals("EHLO") || currentCmd.equals("RSET"))
+	private void validateCommandOrder(SessionContext ctx, CharSequence cmd) {
+		if(Arrays.stream(ALWAYS_ALLOWED_COMMANDS).anyMatch(c -> CharSequenceComparator.equals(c, cmd)))
 			return;
 
-		if(lastCmd.get() == null) {
+		if(ctx.lastCmd == null) {
 			return;
 		}
-	
-		if(
-			currentCmd.equals("RCPT") && lastCmd.get().equals("MAIL") ||
-			currentCmd.equals("RCPT") && lastCmd.get().equals("RCPT") ||
-			currentCmd.equals("DATA") && lastCmd.get().equals("RCPT")
-		)
-			return;
 
-		throw new IllegalStateException();
+		// is a mail transaction going on already
+		if(ctx.mailTransaction != null) {
+			if(
+					CharSequenceComparator.equals(cmd, "RCPT") && CharSequenceComparator.equals(ctx.lastCmd, "MAIL") ||
+					CharSequenceComparator.equals(cmd, "RCPT") && CharSequenceComparator.equals(ctx.lastCmd, "RCPT") ||
+					CharSequenceComparator.equals(cmd, "DATA") && CharSequenceComparator.equals(ctx.lastCmd, "RCPT")
+					) {
+				return;
+			}
+			throw new IllegalStateException();
+		}
 	}
 
-	private static final String[] VALID_COMMANDS = new String[] {"HELO", "EHLO", "MAIL", "RSET", "VRFY", "EXPN", "NOOP", "QUIT"};
+	private static final CharSequence[] VALID_COMMANDS = new String[] {"HELO", "EHLO", "MAIL", "RSET", "VRFY", "EXPN", "NOOP", "QUIT"};
 
 	/**
 	 * is this an valid SMTP command?
 	 * @param cmd
 	 */
-	private boolean validateCommand(String cmd) {
-		return Arrays.stream(VALID_COMMANDS).anyMatch(cmd::equals);
+	private boolean validateCommand(CharSequence cmd) {
+		return Arrays.stream(VALID_COMMANDS).anyMatch(c -> CharSequenceComparator.equals(c, cmd));
 	}
 }

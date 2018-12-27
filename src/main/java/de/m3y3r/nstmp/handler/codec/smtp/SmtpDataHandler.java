@@ -2,17 +2,12 @@ package de.m3y3r.nstmp.handler.codec.smtp;
 
 import java.nio.charset.StandardCharsets;
 
-import de.m3y3r.nstmp.Config;
-import de.m3y3r.nstmp.handler.codec.smtp.model.MailTransaction;
+import de.m3y3r.nstmp.handler.codec.smtp.model.SessionContext;
 import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpCommandReply;
 import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpReplyStatus;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.smtp.SmtpCommand;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 
 /**
  * RFC2821 SMTP server - Handle data lines
@@ -26,16 +21,35 @@ public class SmtpDataHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		ByteBuf frame = (ByteBuf) msg;
-		String line = frame.toString(StandardCharsets.US_ASCII);
-		System.out.println(line);
+		CharSequence line = frame.readCharSequence(frame.readableBytes(), StandardCharsets.US_ASCII);
 
-		Attribute<MailTransaction> mailTx = ctx.channel().attr(AttributeKey.valueOf("mailTransaction"));
-		MailTransaction mailTxR = mailTx.get();
-
-		// TODO: check for escape sequence and reinstall CommandHandler
+		SessionContext sessionContext = ctx.channel().attr(SessionContext.ATTRIBUTE_KEY).get();
 
 		// TODO: implement "4.5.2 Transparency"
-		String transformedLine = line;
-		mailTxR.addBodyLine(transformedLine);
+		CharSequence transformedLine = transformLine(line);
+		if(CharSequenceComparator.equals(".", transformedLine)) {
+			ctx.pipeline().replace(this, "smptInCommand", new SmtpCommandHandler());
+
+			boolean rc = processMail(sessionContext);
+			//FIXME: reset mailtransaction?!
+			sessionContext.mailTransaction = null;
+			if(rc) {
+				Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
+				ctx.writeAndFlush(reply);
+			} else {
+				Object reply = new SmtpCommandReply(SmtpReplyStatus.R450, "FAILED");
+				ctx.writeAndFlush(reply);
+			}
+		} else {
+			sessionContext.mailTransaction.addBodyLine(transformedLine);
+		}
+	}
+
+	private boolean processMail(SessionContext sessionContext) {
+		return true;
+	}
+
+	private CharSequence transformLine(CharSequence line) {
+		return line;
 	}
 }
