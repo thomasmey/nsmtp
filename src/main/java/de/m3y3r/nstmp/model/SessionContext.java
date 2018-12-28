@@ -1,4 +1,4 @@
-package de.m3y3r.nstmp.handler.codec.smtp.model;
+package de.m3y3r.nstmp.model;
 
 import io.netty.util.AttributeKey;
 
@@ -10,5 +10,9 @@ public class SessionContext {
 
 //	public CharSequence currentCmd;
 	public CharSequence lastCmd;
+
+	public void resetMailTransaction() {
+		this.mailTransaction = null;
+	}
 
 }

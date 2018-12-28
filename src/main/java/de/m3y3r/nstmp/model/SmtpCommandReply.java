@@ -1,6 +1,4 @@
-package de.m3y3r.nstmp.handler.codec.smtp.model;
-
-import io.netty.util.AsciiString;
+package de.m3y3r.nstmp.model;
 
 public class SmtpCommandReply {
 

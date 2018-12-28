@@ -1,4 +1,4 @@
-package de.m3y3r.nstmp.handler.codec.smtp.model;
+package de.m3y3r.nstmp.model;
 
 public class SmtpReplyStatus {
 

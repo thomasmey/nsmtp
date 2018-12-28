@@ -2,12 +2,13 @@ package de.m3y3r.nstmp.handler.codec.smtp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
 
-import de.m3y3r.nstmp.handler.codec.smtp.model.MailTransaction;
-import de.m3y3r.nstmp.handler.codec.smtp.model.SessionContext;
-import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpCommandReply;
-import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpReplyStatus;
+import de.m3y3r.nstmp.command.SmtpCommand;
+import de.m3y3r.nstmp.command.SmtpRegistry;
+import de.m3y3r.nstmp.model.SessionContext;
+import de.m3y3r.nstmp.model.SmtpCommandReply;
+import de.m3y3r.nstmp.model.SmtpReplyStatus;
+import de.m3y3r.nstmp.util.CharSequenceComparator;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -27,6 +28,8 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 		ByteBuf frame = (ByteBuf) msg;
 
 		if(!isSessionContext(ctx)) {
+			/*FIXME: is this state even possible? */
+
 			/* we did receive an command before we send an initial greetings reply */
 			/* what to do here? is it possible to send a reply here?
 			 */
@@ -44,121 +47,27 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 		CharSequence argument = line.length() > 4 ? line.subSequence(4, line.length()) : null;
 
 		validateCommand(cmd);
-		validateCommandOrder(sessionContext, cmd);
-
-		/* process command */
-
-		/* 4.5.1 Minimum Implementation */
-		switch (cmd.toString()) { //FIXME: compare by Charsequence if possible
-		case "EHLO":
-		{
-			resetMailTransaction(sessionContext);
-			CharSequence domainOrAddressLiteral = argument;
-			String greeting = "Greetings from Netty SMTP server";
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, domainOrAddressLiteral + " " + greeting);
-			ctx.writeAndFlush(reply);
-			break;
-		}
-
-		case "HELO":
-		{
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R502, "TODO");
-			ctx.writeAndFlush(reply);
-		}
-
-		case "MAIL":
-		{
-
-			MailTransaction mailTx = new MailTransaction();
-			mailTx.setFrom(argument);
-
-			sessionContext.mailTransaction = mailTx;
-
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
-			ctx.writeAndFlush(reply);
-			break;
-		}
-
-		case "RCPT":
-		{
-			MailTransaction mailTx = sessionContext.mailTransaction;
-			mailTx.addTo(argument);
-
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
-			ctx.writeAndFlush(reply);
-			break;
-		}
-
-		case "DATA":
-		{
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R354, "Start mail input; end with <CRLF>.<CRLF>");
-			ctx.writeAndFlush(reply);
-			ctx.pipeline().replace(this, "smptInData", new SmtpDataHandler());
-			break;
-		}
-
-		case "QUIT":
-		{
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R221, null);
-			ctx.writeAndFlush(reply);
-			ctx.close();
-			break;
-		}
 
 		/* order-independent commands:
 		 * "The NOOP, HELP, EXPN, VRFY, and RSET commands can be used at any time during a session"
 		 */
-		case "RSET":
-		{
-			resetMailTransaction(sessionContext); // abort any ongoing mail transaction
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
-			ctx.writeAndFlush(reply);
-			break;
-		}
-		case "VRFY":
-		{
-			boolean isValid = verifyUserOrMailbox(argument);
-			Object reply;
-			if(isValid)
-				reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
-			else
-				reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
+		validateCommandOrder(sessionContext, cmd);
 
-			ctx.writeAndFlush(reply);
-			break;
-		}
-		case "EXPN":
-		{
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R502, "TODO");
-			ctx.writeAndFlush(reply);
-			break;
-		}
-		case "HELP":
-		{
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
-			ctx.writeAndFlush(reply);
-			break;
-		}
-		case "NOOP":
-		{
-			Object reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
-			ctx.writeAndFlush(reply);
-			break;
-		}
-
-		default:
-		{
+		/* process command */
+		SmtpCommand smtpCmd = SmtpRegistry.INSTANCE.getCommand(cmd.toString());
+		if(smtpCmd == null) {
+			// unknown command
 			Object reply = new SmtpCommandReply(SmtpReplyStatus.R500, "WAT?");
 			ctx.writeAndFlush(reply);
-			break;
+			return;
 		}
+
+		SmtpCommandReply reply = smtpCmd.processCommand(sessionContext, ctx, argument);
+		if(reply != null) {
+			ctx.writeAndFlush(reply);
 		}
 
 		sessionContext.lastCmd = cmd;
-	}
-
-	private void resetMailTransaction(SessionContext ctx) {
-		ctx.mailTransaction = null;
 	}
 
 	/**
@@ -169,10 +78,6 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 	private boolean isSessionContext(ChannelHandlerContext ctx) {
 		Attribute<SessionContext> sessionStarted = ctx.channel().attr(SessionContext.ATTRIBUTE_KEY);
 		return sessionStarted.get() != null;
-	}
-
-	private boolean verifyUserOrMailbox(CharSequence argument) {
-		return false;
 	}
 
 	private static final CharSequence[] ALWAYS_ALLOWED_COMMANDS = new String[] {"HELO", "EHLO", "RSET"};

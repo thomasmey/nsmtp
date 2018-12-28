@@ -1,13 +1,12 @@
 package de.m3y3r.nstmp.handler.codec.smtp;
 
 import de.m3y3r.nstmp.Config;
-import de.m3y3r.nstmp.handler.codec.smtp.model.SessionContext;
-import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpCommandReply;
-import de.m3y3r.nstmp.handler.codec.smtp.model.SmtpReplyStatus;
+import de.m3y3r.nstmp.model.SessionContext;
+import de.m3y3r.nstmp.model.SmtpCommandReply;
+import de.m3y3r.nstmp.model.SmtpReplyStatus;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 
 /**
  * RFC2821 SMTP server - "3.1 Session Initiation"

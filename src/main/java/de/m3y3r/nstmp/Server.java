@@ -9,7 +9,6 @@ import de.m3y3r.nstmp.handler.codec.smtp.SmtpCommandHandler;
 import de.m3y3r.nstmp.handler.codec.smtp.SmtpReplyEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;

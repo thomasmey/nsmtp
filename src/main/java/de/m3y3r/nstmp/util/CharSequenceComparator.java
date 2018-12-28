@@ -1,4 +1,4 @@
-package de.m3y3r.nstmp.handler.codec.smtp;
+package de.m3y3r.nstmp.util;
 
 public class CharSequenceComparator {
 
