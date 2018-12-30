@@ -1,5 +1,7 @@
 package de.m3y3r.nstmp.command;
 
+import java.util.List;
+
 import de.m3y3r.nstmp.handler.codec.smtp.SmtpDataHandler;
 import de.m3y3r.nstmp.model.MailTransaction;
 import de.m3y3r.nstmp.model.SessionContext;
@@ -8,10 +10,10 @@ import de.m3y3r.nstmp.model.SmtpReplyStatus;
 import de.m3y3r.nstmp.util.Path;
 import io.netty.channel.ChannelHandlerContext;
 
-public class Recipent implements SmtpCommand {
+public class Recipent extends AbstractSmtpCommand {
 
 	@Override
-	public CharSequence getCommandWord() {
+	public CharSequence getCommandVerb() {
 		return "RCPT";
 	}
 
@@ -26,5 +28,4 @@ public class Recipent implements SmtpCommand {
 		SmtpCommandReply reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
 		return reply;
 	}
-
 }

@@ -1,15 +1,17 @@
 package de.m3y3r.nstmp.command;
 
+import java.util.List;
+
 import de.m3y3r.nstmp.model.MailTransaction;
 import de.m3y3r.nstmp.model.SessionContext;
 import de.m3y3r.nstmp.model.SmtpCommandReply;
 import de.m3y3r.nstmp.model.SmtpReplyStatus;
 import io.netty.channel.ChannelHandlerContext;
 
-public class VerifyMailbox implements SmtpCommand {
+public class VerifyMailbox extends AbstractSmtpCommand {
 
 	@Override
-	public CharSequence getCommandWord() {
+	public CharSequence getCommandVerb() {
 		return "VRFY";
 	}
 
@@ -30,5 +32,4 @@ public class VerifyMailbox implements SmtpCommand {
 	private boolean verifyUserOrMailbox(CharSequence argument) {
 		return true;
 	}
-
 }

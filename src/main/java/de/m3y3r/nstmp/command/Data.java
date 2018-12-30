@@ -1,15 +1,17 @@
 package de.m3y3r.nstmp.command;
 
+import java.util.List;
+
 import de.m3y3r.nstmp.handler.codec.smtp.SmtpDataHandler;
 import de.m3y3r.nstmp.model.SessionContext;
 import de.m3y3r.nstmp.model.SmtpCommandReply;
 import de.m3y3r.nstmp.model.SmtpReplyStatus;
 import io.netty.channel.ChannelHandlerContext;
 
-public class Data implements SmtpCommand {
+public class Data extends AbstractSmtpCommand {
 
 	@Override
-	public CharSequence getCommandWord() {
+	public CharSequence getCommandVerb() {
 		return "DATA";
 	}
 
@@ -23,5 +25,4 @@ public class Data implements SmtpCommand {
 
 		return reply;
 	}
-
 }

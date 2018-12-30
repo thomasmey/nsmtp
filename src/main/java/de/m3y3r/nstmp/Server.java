@@ -55,7 +55,7 @@ public class Server implements Runnable {
 					protected void initChannel(SocketChannel ch) throws Exception {
 						ch.pipeline().addLast("smtpOutReply", new SmtpReplyEncoder());
 						ch.pipeline().addLast("smptInSession", new SessionInitiationHandler());
-						ch.pipeline().addLast("smtpInLine", new DelimiterBasedFrameDecoder(Config.INSTANCE.getMaxCommandLen(), true, delimiter));
+						ch.pipeline().addLast("smtpInLine", new DelimiterBasedFrameDecoder(Config.INSTANCE.getDefaultCommandLen(), true, delimiter));
 						ch.pipeline().addLast("smptInCommand", new SmtpCommandHandler());
 					}
 				});

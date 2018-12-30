@@ -14,7 +14,7 @@ public class Path {
 
 	public static Path parse(CharSequence argument) {
 
-		//FIXME: not sure about 256 for path, see rfc2821 - "4.5.3.1 Size limits and minimums"
+		//FIXME: not sure about 256 for path, see rfc5321 - "4.5.3.1.3"
 		if(argument == null || argument.length() == 0 || argument.length() > 256) {
 			return null;
 		}
@@ -112,7 +112,7 @@ public class Path {
 
 			switch(mode) {
 			case 1: // dot-string - atext start
-				// fun fact: RFC2821 misses the definition of "atext", but RFC2822 has it...
+				// fun fact: rfc5321 misses the definition of "atext", but rfc5322 has it...
 				if(cc == '.' && i == 0) { // no dot on start or end! and not '..' (no multiple dots without atext in between)!
 					return false;
 				}

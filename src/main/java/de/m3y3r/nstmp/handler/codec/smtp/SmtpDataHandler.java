@@ -11,9 +11,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
 /**
- * RFC2821 SMTP server - Handle data lines
+ * rfc5321 SMTP server - Handle data lines
  *
- * https://tools.ietf.org/html/rfc2821
+ * https://tools.ietf.org/html/rfc5321
  * @author thomas
  *
  */
@@ -47,7 +47,7 @@ public class SmtpDataHandler extends ChannelInboundHandlerAdapter {
 
 	// TODO: implement "4.5.2 Transparency"
 	private CharSequence transformLine(CharSequence line) {
-		if(line.charAt(0) == '.') {
+		if(line.length() > 0 && line.charAt(0) == '.') {
 			
 		}
 		return line;

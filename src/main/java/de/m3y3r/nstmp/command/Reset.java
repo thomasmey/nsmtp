@@ -1,14 +1,16 @@
 package de.m3y3r.nstmp.command;
 
+import java.util.List;
+
 import de.m3y3r.nstmp.model.SessionContext;
 import de.m3y3r.nstmp.model.SmtpCommandReply;
 import de.m3y3r.nstmp.model.SmtpReplyStatus;
 import io.netty.channel.ChannelHandlerContext;
 
-public class Reset implements SmtpCommand {
+public class Reset extends AbstractSmtpCommand {
 
 	@Override
-	public CharSequence getCommandWord() {
+	public CharSequence getCommandVerb() {
 		return "RSET";
 	}
 

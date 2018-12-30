@@ -1,5 +1,7 @@
 package de.m3y3r.nstmp.command;
 
+import java.util.List;
+
 import de.m3y3r.nstmp.model.SessionContext;
 import de.m3y3r.nstmp.model.SmtpCommandReply;
 import de.m3y3r.nstmp.model.SmtpReplyStatus;
@@ -10,10 +12,10 @@ import io.netty.channel.ChannelHandlerContext;
  * @author thomas
  *
  */
-public class ExpandMailingList implements SmtpCommand {
+public class ExpandMailingList extends AbstractSmtpCommand {
 
 	@Override
-	public CharSequence getCommandWord() {
+	public CharSequence getCommandVerb() {
 		return "EXPN";
 	}
 
@@ -23,5 +25,4 @@ public class ExpandMailingList implements SmtpCommand {
 		SmtpCommandReply reply = new SmtpCommandReply(SmtpReplyStatus.R502, "TODO");
 		return reply;
 	}
-
 }

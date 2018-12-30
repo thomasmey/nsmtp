@@ -18,7 +18,7 @@ public class InMemoryMailDataProcessor implements MailDataProcessor {
 
 	@Override
 	public boolean finish() {
-		return false;
+		return true;
 	}
 
 }

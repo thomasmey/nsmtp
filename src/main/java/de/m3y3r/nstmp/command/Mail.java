@@ -1,15 +1,17 @@
 package de.m3y3r.nstmp.command;
 
+import java.util.List;
+
 import de.m3y3r.nstmp.model.MailTransaction;
 import de.m3y3r.nstmp.model.SessionContext;
 import de.m3y3r.nstmp.model.SmtpCommandReply;
 import de.m3y3r.nstmp.model.SmtpReplyStatus;
 import io.netty.channel.ChannelHandlerContext;
 
-public class Mail implements SmtpCommand {
+public class Mail extends AbstractSmtpCommand {
 
 	@Override
-	public CharSequence getCommandWord() {
+	public CharSequence getCommandVerb() {
 		return "MAIL";
 	}
 
@@ -23,5 +25,4 @@ public class Mail implements SmtpCommand {
 		SmtpCommandReply reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
 		return reply;
 	}
-
 }

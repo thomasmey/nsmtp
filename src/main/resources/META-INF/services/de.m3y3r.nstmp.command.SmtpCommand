@@ -1,0 +1,9 @@
+de.m3y3r.nstmp.command.ExtendedHello
+de.m3y3r.nstmp.command.Data
+de.m3y3r.nstmp.command.Help
+de.m3y3r.nstmp.command.Mail
+de.m3y3r.nstmp.command.NoOperation
+de.m3y3r.nstmp.command.Quit
+de.m3y3r.nstmp.command.Recipent
+de.m3y3r.nstmp.command.Reset
+de.m3y3r.nstmp.command.VerifyMailbox

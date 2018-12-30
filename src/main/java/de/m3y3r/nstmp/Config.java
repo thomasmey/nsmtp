@@ -4,11 +4,11 @@ public enum Config {
 
 	INSTANCE;
 
-	public int getMaxDataLen() {
+	public int getDefaultDataLen() {
 		return 1001; // 1000 or 1001 for extra .. -> . handling?
 	}
 
-	public int getMaxCommandLen() {
+	public int getDefaultCommandLen() {
 		return 512;
 	}
 

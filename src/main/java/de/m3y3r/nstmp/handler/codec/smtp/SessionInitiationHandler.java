@@ -9,9 +9,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.Attribute;
 
 /**
- * RFC2821 SMTP server - "3.1 Session Initiation"
+ * rfc5321 SMTP server - "3.1 Session Initiation"
  *
- * https://tools.ietf.org/html/rfc2821
+ * https://tools.ietf.org/html/rfc5321
  * @author thomas
  *
  */
