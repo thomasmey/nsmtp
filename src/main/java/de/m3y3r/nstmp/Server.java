@@ -1,6 +1,8 @@
 package de.m3y3r.nstmp;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.Channel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,9 +49,20 @@ public class Server implements Runnable {
 			byte[] CRLF = {'\r', '\n'};
 			ByteBuf delimiter = Unpooled.buffer(2).writeBytes(CRLF);
 
+			// let systemd bind the port and provide it via fd0/1
+			java.nio.channels.ServerSocketChannel ssc;
+			Channel ic = System.inheritedChannel();
+			if(ic instanceof java.nio.channels.ServerSocketChannel) {
+				ssc = (java.nio.channels.ServerSocketChannel) ic;
+			} else {
+				ssc = java.nio.channels.ServerSocketChannel.open();
+				ssc.bind(new InetSocketAddress(port));
+			}
+
 			b.group(eventLoopGroup)
-				.channel(NioServerSocketChannel.class)
-				.localAddress(new InetSocketAddress(port))
+				.channelFactory(() -> new NioServerSocketChannel(ssc))
+//				.channel(NioServerSocketChannel.class)
+//				.localAddress(new InetSocketAddress(port))
 				.childHandler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					protected void initChannel(SocketChannel ch) throws Exception {
@@ -59,9 +72,9 @@ public class Server implements Runnable {
 						ch.pipeline().addLast("smptInCommand", new SmtpCommandHandler());
 					}
 				});
-			ChannelFuture f = b.bind().sync();
+			ChannelFuture f = b.register().sync();
 			f.channel().closeFuture().sync();
-		} catch (InterruptedException e) {
+		} catch (InterruptedException | IOException e) {
 			logger.log(Level.SEVERE, "Int1", e);
 		} finally {
 			try {
