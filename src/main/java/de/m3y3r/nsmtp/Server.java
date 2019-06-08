@@ -3,8 +3,9 @@ package de.m3y3r.nsmtp;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.Channel;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.m3y3r.nsmtp.handler.codec.smtp.SessionInitiationHandler;
 import de.m3y3r.nsmtp.handler.codec.smtp.SmtpCommandHandler;
@@ -28,8 +29,9 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
  */
 public class Server implements Runnable {
 
+	private static final Logger logger = LoggerFactory.getLogger(Server.class.getName());
+
 	private int port;
-	private static final Logger logger = Logger.getLogger(Server.class.getName());
 
 	public Server(int port) {
 		this.port = port;
@@ -59,7 +61,7 @@ public class Server implements Runnable {
 				ssc.bind(new InetSocketAddress(port));
 			}
 
-			logger.log(Level.INFO, "Starting nstmp with socket {0}", ssc);
+			logger.info("Starting nstmp with socket {0}", ssc);
 			b.group(eventLoopGroup)
 				.channelFactory(() -> new NioServerSocketChannel(ssc))
 //				.channel(NioServerSocketChannel.class)
@@ -76,12 +78,12 @@ public class Server implements Runnable {
 			ChannelFuture f = b.register().sync();
 			f.channel().closeFuture().sync();
 		} catch (InterruptedException | IOException e) {
-			logger.log(Level.SEVERE, "Int1", e);
+			logger.error("Int1", e);
 		} finally {
 			try {
 				eventLoopGroup.shutdownGracefully().sync();
 			} catch (InterruptedException e) {
-				logger.log(Level.SEVERE, "Int2", e);
+				logger.error("Int2", e);
 			}
 		}
 	}
