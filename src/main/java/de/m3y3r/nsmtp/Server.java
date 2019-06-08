@@ -61,7 +61,7 @@ public class Server implements Runnable {
 				ssc.bind(new InetSocketAddress(port));
 			}
 
-			logger.info("Starting nstmp with socket {0}", ssc);
+			logger.info("Starting nstmp with socket {}", ssc);
 			b.group(eventLoopGroup)
 				.channelFactory(() -> new NioServerSocketChannel(ssc))
 //				.channel(NioServerSocketChannel.class)
