@@ -3,6 +3,9 @@ package de.m3y3r.nsmtp.handler.codec.smtp;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import de.m3y3r.nsmtp.command.SmtpCommand;
 import de.m3y3r.nsmtp.command.SmtpRegistry;
 import de.m3y3r.nsmtp.model.SessionContext;
@@ -22,6 +25,8 @@ import io.netty.util.Attribute;
  *
  */
 public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
+
+	private static Logger log = LoggerFactory.getLogger(SmtpCommandHandler.class);
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -56,6 +61,7 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 		/* process command */
 		SmtpCommand smtpCmd = SmtpRegistry.INSTANCE.getCommand(cmd.toString());
 		if(smtpCmd == null) {
+			log.error("Received unknown command {}", cmd);
 			// unknown command
 			Object reply = new SmtpCommandReply(SmtpReplyStatus.R500, "WAT?");
 			ctx.writeAndFlush(reply);

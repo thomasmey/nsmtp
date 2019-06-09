@@ -73,6 +73,7 @@ public class Server implements Runnable {
 						ch.pipeline().addLast("smptInSession", new SessionInitiationHandler());
 						ch.pipeline().addLast("smtpInLine", new DelimiterBasedFrameDecoder(Config.INSTANCE.getDefaultCommandLen(), true, delimiter));
 						ch.pipeline().addLast("smptInCommand", new SmtpCommandHandler());
+						ch.pipeline().addLast("exceptionLogger", new ExceptionLogger());
 					}
 				});
 			ChannelFuture f = b.register().sync();

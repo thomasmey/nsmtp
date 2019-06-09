@@ -1,7 +1,5 @@
 package de.m3y3r.nsmtp.command;
 
-import java.util.List;
-
 import de.m3y3r.nsmtp.model.MailTransaction;
 import de.m3y3r.nsmtp.model.SessionContext;
 import de.m3y3r.nsmtp.model.SmtpCommandReply;

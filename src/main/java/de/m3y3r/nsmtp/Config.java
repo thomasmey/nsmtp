@@ -1,5 +1,10 @@
 package de.m3y3r.nsmtp;
 
+import java.io.File;
+
+import de.m3y3r.nsmtp.maildata.MailDataProcessor;
+import de.m3y3r.nsmtp.maildata.MailDirWriter;
+
 public enum Config {
 
 	INSTANCE;
@@ -14,5 +19,14 @@ public enum Config {
 
 	public String getDomain() {
 		return "localhost";
+	}
+
+	public File getMailDir() {
+		return new File(System.getProperty("user.home"), "nsmtp");
+	}
+
+	public MailDataProcessor getMailDataProcessor() {
+//		return new InMemoryMailDataProcessor();
+		return new MailDirWriter();
 	}
 }

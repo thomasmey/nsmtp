@@ -1,0 +1,9 @@
+de.m3y3r.nsmtp.command.ExtendedHello
+de.m3y3r.nsmtp.command.Data
+de.m3y3r.nsmtp.command.Help
+de.m3y3r.nsmtp.command.Mail
+de.m3y3r.nsmtp.command.NoOperation
+de.m3y3r.nsmtp.command.Quit
+de.m3y3r.nsmtp.command.Recipent
+de.m3y3r.nsmtp.command.Reset
+de.m3y3r.nsmtp.command.VerifyMailbox

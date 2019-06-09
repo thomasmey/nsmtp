@@ -3,7 +3,7 @@
   <appender name="console" class="ch.qos.logback.core.ConsoleAppender" />
 
   <root level="info">
-    <!-- <appender-ref ref="journal" /> -->
-    <appender-ref ref="console" />
+    <appender-ref ref="journal" />
+    <!-- appender-ref ref="console" / -->
   </root>
 </configuration>

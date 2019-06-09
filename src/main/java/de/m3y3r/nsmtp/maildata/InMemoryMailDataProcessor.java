@@ -1,6 +1,7 @@
-package de.m3y3r.nsmtp.model;
+package de.m3y3r.nsmtp.maildata;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class InMemoryMailDataProcessor implements MailDataProcessor {
@@ -21,4 +22,7 @@ public class InMemoryMailDataProcessor implements MailDataProcessor {
 		return true;
 	}
 
+	public List<CharSequence> getMailData() {
+		return Collections.unmodifiableList(mailData);
+	}
 }
