@@ -1,0 +1,6 @@
+[Unit]
+Description=Netty based SMTP server
+
+[Service]
+ExecStart=/usr/bin/java -jar /opt/nsmtp/nsmtp.jar
+StandardInput=socket

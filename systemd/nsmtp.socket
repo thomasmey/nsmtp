@@ -1,0 +1,8 @@
+[Unit]
+Description=Netty based SMTP server
+
+[Socket]
+ListenStream=25
+Accept=no
+
+[Install]
