@@ -29,4 +29,16 @@ public enum Config {
 //		return new InMemoryMailDataProcessor();
 		return new MailDirWriter();
 	}
+
+	public String getTlsKeyFile() {
+		return null;
+	}
+
+	public String getTlsTrustStoreFile() {
+		return null;
+	}
+
+	public String getTlsKeyPassword() {
+		return null;
+	}
 }

@@ -48,8 +48,16 @@ public class SmtpCommandHandler extends ChannelInboundHandlerAdapter {
 		SessionContext sessionContext = ctx.channel().attr(SessionContext.ATTRIBUTE_KEY).get();
 
 		CharSequence line = frame.readCharSequence(frame.readableBytes(), StandardCharsets.US_ASCII);
-		CharSequence cmd = line.subSequence(0, 4);
-		CharSequence argument = line.length() > 4 ? line.subSequence(4, line.length()) : null;
+
+		int iac = line.length();
+		for(int i = 0, n = line.length(); i < n; i++) {
+			if(line.charAt(i) == ' ') {
+				iac = i;
+				break;
+			}
+		}
+		CharSequence cmd = line.subSequence(0, iac);
+		CharSequence argument = line.length() > iac ? line.subSequence(iac, line.length()) : null;
 
 		validateCommand(cmd);
 

@@ -9,7 +9,7 @@ import io.netty.channel.ChannelHandlerContext;
 public abstract class AbstractSmtpCommand implements SmtpCommand {
 
 	@Override
-	public CharSequence getHelloKeyword() {
+	public CharSequence getHelloKeyword(SessionContext ctx) {
 		return null;
 	}
 

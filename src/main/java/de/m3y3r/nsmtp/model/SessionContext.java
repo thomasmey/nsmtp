@@ -16,6 +16,8 @@ public class SessionContext {
 //	public CharSequence currentCmd;
 	public CharSequence lastCmd;
 
+	public boolean tlsActive;
+
 	public void resetMailTransaction() {
 		this.mailTransaction = null;
 	}

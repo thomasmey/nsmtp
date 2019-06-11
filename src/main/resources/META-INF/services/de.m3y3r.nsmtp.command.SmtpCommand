@@ -7,3 +7,4 @@ de.m3y3r.nsmtp.command.Quit
 de.m3y3r.nsmtp.command.Recipent
 de.m3y3r.nsmtp.command.Reset
 de.m3y3r.nsmtp.command.VerifyMailbox
+de.m3y3r.nsmtp.command.StartTLS

@@ -23,6 +23,7 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 
 /**
  * SMTP delivery system
+ * https://tools.ietf.org/html/rfc5321
  *
  * @author thomas
  *

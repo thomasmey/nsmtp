@@ -9,7 +9,7 @@ import io.netty.channel.ChannelHandlerContext;
 public interface SmtpCommand {
 
 	CharSequence getCommandVerb();
-	CharSequence getHelloKeyword();
+	CharSequence getHelloKeyword(SessionContext ctx);
 	List<CharSequence> getHelloParams(SessionContext ctx);
 	List<CharSequence> getMailParams(SessionContext ctx);
 	List<CharSequence> getRecipentParams(SessionContext ctx);
