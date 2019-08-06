@@ -24,10 +24,13 @@ public class SmtpDataHandler extends ChannelInboundHandlerAdapter {
 		ByteBuf frame = (ByteBuf) msg;
 		SessionContext sessionContext = ctx.channel().attr(SessionContext.ATTRIBUTE_KEY).get();
 
+		//TODO: US-ASCII fix ?!
 		CharSequence line = frame.readCharSequence(frame.readableBytes(), StandardCharsets.US_ASCII);
 
 		CharSequence transformedLine = transformLine(line);
+		// is the line a single dot i.e. end of DATA?
 		if(CharSequenceComparator.equals(".", transformedLine)) {
+			//if so, switch back to command handler
 			ctx.pipeline().replace(this, "smptInCommand", new SmtpCommandHandler());
 
 			boolean rc = sessionContext.mailTransaction.mailFinished();
@@ -48,7 +51,7 @@ public class SmtpDataHandler extends ChannelInboundHandlerAdapter {
 	// TODO: implement "4.5.2 Transparency"
 	private CharSequence transformLine(CharSequence line) {
 		if(line.length() > 0 && line.charAt(0) == '.') {
-			
+			//TODO:!!
 		}
 		return line;
 	}

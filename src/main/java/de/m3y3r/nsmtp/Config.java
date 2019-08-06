@@ -3,7 +3,7 @@ package de.m3y3r.nsmtp;
 import java.io.File;
 
 import de.m3y3r.nsmtp.maildata.MailDataProcessor;
-import de.m3y3r.nsmtp.maildata.MailDirWriter;
+import de.m3y3r.nsmtp.maildata.impl.MailDirWriter;
 
 public enum Config {
 

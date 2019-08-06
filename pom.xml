@@ -66,6 +66,7 @@
 			<artifactId>logback-journal</artifactId>
 			<version>0.3.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-transport</artifactId>
@@ -84,8 +85,15 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-handler</artifactId>
-			<version>4.1.36.Final</version>
+			<version>${netty.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>6.9.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

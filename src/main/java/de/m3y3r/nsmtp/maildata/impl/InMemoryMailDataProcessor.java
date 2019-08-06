@@ -1,8 +1,11 @@
-package de.m3y3r.nsmtp.maildata;
+package de.m3y3r.nsmtp.maildata.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import de.m3y3r.nsmtp.maildata.MailDataProcessor;
+import de.m3y3r.nsmtp.model.imf.InternetMessageBuilder;
 
 public class InMemoryMailDataProcessor implements MailDataProcessor {
 
@@ -19,6 +22,11 @@ public class InMemoryMailDataProcessor implements MailDataProcessor {
 
 	@Override
 	public boolean finish() {
+		InternetMessageBuilder builder = new InternetMessageBuilder();
+		for(CharSequence line : mailData) {
+			builder.addLine(line);
+		}
+		builder.build();
 		return true;
 	}
 

@@ -1,4 +1,4 @@
-package de.m3y3r.nsmtp.maildata;
+package de.m3y3r.nsmtp.maildata.impl;
 
 import java.io.File;
 import java.io.FileOutputStream;
