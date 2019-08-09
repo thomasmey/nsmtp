@@ -9,40 +9,65 @@ public class InternetMessageBuilder {
 
 	private enum State {HEADER, BODY}
 	private static final int MAX_LINE_LENGTH = 998;
-	private static final String LINE_TOO_LONG = "Line length exceeds max specified length in RFC";
 	private State state = State.HEADER;
 
 	private Headers headers = new Headers();
-	private Body body = new Body();
+	private AbstractBody body = new RFC5322Body();
+
+	private StringBuilder unfoldedLine;
+	private CharSequence lastLine;
 
 	/*
-	 * unlike the RFC the CRLF delimiter will be stripped of in this implementation
+	 * unlike the RFC the CRLF delimiter is assumed to be already stripped of in this implementation!
 	 */
 	public InternetMessageBuilder addLine(CharSequence line) {
-		if(line.length() == 0) {
-			state = State.BODY;
-			return this;
-		}
-
-		//TODO: where to put all these constraints?
 		if(line.length() > MAX_LINE_LENGTH) {
 			log.error("Line too long {}", line.length());
-			throw new IllegalArgumentException(LINE_TOO_LONG);
+			throw new LineTooLongException();
 		}
 
 		switch(state) {
 		case HEADER:
-			headers.addHeader(Header.parse(line));
+			if(lastLine != null) { // this is the first header line we do process
+				if(Header.isFolded(line)) { // is the current line folded?
+					if(unfoldedLine == null) { // are we unfolding the first line
+						unfoldedLine = new StringBuilder(lastLine); // append previous line to unfolded line
+					} else {
+						unfoldedLine.append(lastLine);
+					}
+				} else {
+					if(unfoldedLine != null) { // process any previous folded lines
+						unfoldedLine.append(lastLine);
+						headers.addHeader(Header.parse(unfoldedLine));
+						unfoldedLine = null;
+					} else {
+						headers.addHeader(Header.parse(lastLine));
+					}
+				}
+			}
+
+			if(line.length() == 0) { // empty line switches from headers to body
+				/* TODO: is this empty line mandatory?
+				 * NO! The empty line is optional and belongs to the body! see 3.5.  Overall Message Syntax!
+				 * FIXME: how to ensure that the last field/header line is processed correctly?
+				 * introduce an finish() method?!
+				 */
+				state = State.BODY;
+				lastLine = null;
+			} else {
+				lastLine = line;
+			}
 			break;
 		case BODY:
-//			body.addLine(line);
+			System.out.println("body: " + line);
+			body.addLine(line);
 			break;
 		}
 		return this;
 	}
 
 	public InternetMessage build() {
-//		headers.validate();
+//		headers.validate(); // check for duplicate headers or not existing mandatory headers
 //		body.validate();
 		return new InternetMessage(headers, body);
 	}

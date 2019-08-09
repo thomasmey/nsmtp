@@ -8,9 +8,48 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import de.m3y3r.nsmtp.mailbox.Mailbox;
+import de.m3y3r.nsmtp.util.Path;
+
 public class Headers {
 
 	private final List<Header> headers = new ArrayList<>();
+
+	// 3.6.1.  The Origination Date Field
+	private MailDate origDate;
+
+	// 3.6.2.  Originator Fields
+	private List<Mailbox> from;
+	private Mailbox sender; // mandatory if from > 1
+	private List<Address> replyTo;
+
+	// 3.6.3.  Destination Address Fields
+	private List<Address> to;
+	private List<Address> cc;
+	private List<Address> bcc;
+
+	// 3.6.4.  Identification Fields
+	private MessageId messageId;
+	private List<MessageId> inReplyTo; // one or more
+	private List<MessageId> references; // one or more
+
+	// 3.6.5.  Informational Fields
+	private String subject;
+	private String comments;
+	private List<Keyword> keywords;
+
+	// 3.6.6.  Resent Fields
+	private MailDate resentDate;
+	private List<Mailbox> resentFrom;
+	private Mailbox resentSender; // mandatory if from > 1
+	private List<Address> resentTo;
+	private List<Address> resentCc;
+	private List<Address> resentBcc;
+	private MessageId resentMessageId;
+
+	// 3.6.7.  Trace Fields
+	private Path returnPath; // optional
+	private List<ReceivedTrace> received;
 
 	public Headers() {}
 
