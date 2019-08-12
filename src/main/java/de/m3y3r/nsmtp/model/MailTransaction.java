@@ -9,11 +9,10 @@ import org.slf4j.LoggerFactory;
 import de.m3y3r.nsmtp.Config;
 import de.m3y3r.nsmtp.maildata.MailDataProcessor;
 import de.m3y3r.nsmtp.util.Path;
+import io.netty.buffer.ByteBuf;
 
 /**
  * models an ongoing mail transaction
- * @author thomas
- *
  */
 public class MailTransaction {
 
@@ -29,6 +28,7 @@ public class MailTransaction {
 		mailDataProcessor = Config.INSTANCE.getMailDataProcessor();
 	}
 
+	// from SMTP commands
 	public void addTo(CharSequence argument) {
 		if(argument == null) {
 			throw new IllegalArgumentException();
@@ -48,16 +48,16 @@ public class MailTransaction {
 		this.reversePath = Path.parse(argument);
 	}
 
-	public void addDataLine(CharSequence argument) {
-		if(argument == null) {
+	// from SMTP data
+	public void addDataLine(ByteBuf lineWithoutCRLF) {
+		if(lineWithoutCRLF == null) {
 			throw new IllegalArgumentException();
 		}
 
-		mailDataProcessor.addDataLine(argument);
+		mailDataProcessor.addDataLine(lineWithoutCRLF);
 	}
 
 	public boolean mailFinished() {
 		return mailDataProcessor.finish();
 	}
-
 }

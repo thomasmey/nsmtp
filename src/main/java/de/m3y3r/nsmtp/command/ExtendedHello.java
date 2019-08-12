@@ -30,7 +30,7 @@ public class ExtendedHello extends AbstractSmtpCommand {
 
 		List<String> lines = new ArrayList<String>();
 		lines.add(domainOrAddressLiteral + " " + greeting);
-		for(SmtpCommand cmd: SmtpRegistry.INSTANCE.getCommands()) {
+		for(SmtpCommand cmd: SmtpRegistry.INSTANCE.getHelloKeywords(ctxMailSession)) {
 			CharSequence helloKeyword = cmd.getHelloKeyword(ctxMailSession);
 			if(helloKeyword != null) {
 				String line = helloKeyword.toString();
@@ -42,6 +42,7 @@ public class ExtendedHello extends AbstractSmtpCommand {
 				lines.add(line);
 			}
 		}
+		logger.info("using lines: {}", lines);
 		SmtpCommandReply reply = new SmtpCommandReply(SmtpReplyStatus.R250, lines);
 		return reply;
 	}

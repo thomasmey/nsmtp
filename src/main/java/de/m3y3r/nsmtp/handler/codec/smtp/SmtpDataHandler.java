@@ -1,11 +1,8 @@
 package de.m3y3r.nsmtp.handler.codec.smtp;
 
-import java.nio.charset.StandardCharsets;
-
 import de.m3y3r.nsmtp.model.SessionContext;
 import de.m3y3r.nsmtp.model.SmtpCommandReply;
 import de.m3y3r.nsmtp.model.SmtpReplyStatus;
-import de.m3y3r.nsmtp.util.CharSequenceComparator;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -21,15 +18,13 @@ public class SmtpDataHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		ByteBuf frame = (ByteBuf) msg;
+		ByteBuf bbLine = (ByteBuf) msg;
 		SessionContext sessionContext = ctx.channel().attr(SessionContext.ATTRIBUTE_KEY).get();
 
-		//TODO: US-ASCII fix ?!
-		CharSequence line = frame.readCharSequence(frame.readableBytes(), StandardCharsets.US_ASCII);
+		transformLine(bbLine);
 
-		CharSequence transformedLine = transformLine(line);
 		// is the line a single dot i.e. end of DATA?
-		if(CharSequenceComparator.equals(".", transformedLine)) {
+		if(bbLine.readableBytes() == 1 && bbLine.getByte(bbLine.readerIndex()) == '.') {
 			//if so, switch back to command handler
 			ctx.pipeline().replace(this, "smptInCommand", new SmtpCommandHandler());
 
@@ -44,15 +39,15 @@ public class SmtpDataHandler extends ChannelInboundHandlerAdapter {
 				ctx.writeAndFlush(reply);
 			}
 		} else {
-			sessionContext.mailTransaction.addDataLine(transformedLine);
+			sessionContext.mailTransaction.addDataLine(bbLine.copy()); //TODO: copy or retain?!
 		}
 	}
 
-	// TODO: implement "4.5.2 Transparency"
-	private CharSequence transformLine(CharSequence line) {
-		if(line.length() > 0 && line.charAt(0) == '.') {
-			//TODO:!!
+	private void transformLine(ByteBuf line) {
+		if(line.readableBytes() >= 1 && line.getByte(line.readerIndex()) == '.') {
+			if(line.readableBytes() > 1) {
+				line.readByte(); // consume '.' if there are other characters on the line
+			}
 		}
-		return line;
 	}
 }

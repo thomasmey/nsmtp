@@ -19,6 +19,11 @@ public class Mail extends AbstractSmtpCommand {
 		MailTransaction mailTx = new MailTransaction();
 		mailTx.setFrom(argument);
 
+		/*
+		 * TODO: process new optional parameter from 8bit-MIMEtransport (rfc1652):
+		 *   "7BIT" / "8BITMIME"
+		 * and add it to the mailTransaction
+		 */
 		ctxMailSession.mailTransaction = mailTx;
 		SmtpCommandReply reply = new SmtpCommandReply(SmtpReplyStatus.R250, "OK");
 		return reply;

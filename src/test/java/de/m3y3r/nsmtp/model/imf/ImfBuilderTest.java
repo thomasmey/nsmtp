@@ -5,8 +5,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+
+@Ignore
 public class ImfBuilderTest {
 
 	private enum State {TEXT, CR, LF};
@@ -17,8 +22,8 @@ public class ImfBuilderTest {
 		File rawMail = new File("/home/thomas/db-mail.dump.txt");
 		State state = State.TEXT;
 		boolean firstLine = true;
+		ByteBuf bb = ByteBufAllocator.DEFAULT.buffer();
 		try(InputStream is = new FileInputStream(rawMail)) {
-			StringBuffer line = new StringBuffer();
 			int b = is.read();
 			while(b >= 0) {
 				boolean appendChar = true;
@@ -33,11 +38,11 @@ public class ImfBuilderTest {
 						appendChar = false;
 
 						if(!firstLine) {
-							imb.addLine(line);
+							imb.addLine(bb);
 						} else {
 							firstLine = false;
 						}
-						line = new StringBuffer();
+						bb.clear();
 						state = State.TEXT;
 //					} else {
 //						throw new IllegalStateException("CR without LF, is this allowed according to RFC?!");
@@ -45,7 +50,7 @@ public class ImfBuilderTest {
 				}
 
 				if(appendChar) {
-					line.append((char)b);
+					bb.writeByte(b);
 				}
 				b = is.read();
 			}

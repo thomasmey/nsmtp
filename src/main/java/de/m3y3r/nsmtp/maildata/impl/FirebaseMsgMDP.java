@@ -17,9 +17,10 @@ public class FirebaseMsgMDP extends InMemoryMailDataProcessor {
 		Object ctx = null;
 		String registrationToken = FirebaseConfig.getInstance().getRegistrationToken(ctx);
 
-		CharSequence subject = this.getMailData().stream().filter(cs -> cs.toString().startsWith("Subject: ")).map(cs -> cs.subSequence("Subject: ".length(), cs.length())).findFirst().orElse("MISSING");
+//		CharSequence subject = this.getMailData().stream().filter(cs -> cs.toString().startsWith("Subject: ")).map(cs -> cs.subSequence("Subject: ".length(), cs.length())).findFirst().orElse("MISSING");
 
-		Notification notification = new Notification("New transaction event DB", subject.toString());
+		String subject = "optional mail subject";
+		Notification notification = new Notification("New transaction event DB", subject);
 		Message message = Message.builder()
 				.setNotification(notification)
 				.setToken(registrationToken)

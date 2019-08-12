@@ -1,8 +1,10 @@
 package de.m3y3r.nsmtp.maildata;
 
+import io.netty.buffer.ByteBuf;
+
 public interface MailDataProcessor {
 
-	void addDataLine(CharSequence argument);
+	void addDataLine(ByteBuf lineWithoutCRLF);
 
 	/**
 	 * callback being called when the last mail data line was received, i.e. 

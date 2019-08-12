@@ -1,7 +1,12 @@
 package de.m3y3r.nsmtp.model.imf;
 
+import java.nio.charset.StandardCharsets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 
 public class InternetMessageBuilder {
 
@@ -12,63 +17,68 @@ public class InternetMessageBuilder {
 	private State state = State.HEADER;
 
 	private Headers headers = new Headers();
-	private AbstractBody body = new RFC5322Body();
+	private AbstractBody body;
 
-	private StringBuilder unfoldedLine;
-	private CharSequence lastLine;
+	private ByteBuf unfoldedLine = ByteBufAllocator.DEFAULT.buffer(); // TODO: somehow restrict this regarding max length?!
 
 	/*
-	 * unlike the RFC the CRLF delimiter is assumed to be already stripped of in this implementation!
+	 * unlike the RFC the CRLF delimiter is assumed to be already stripped of of the end of line in this implementation!
 	 */
-	public InternetMessageBuilder addLine(CharSequence line) {
-		if(line.length() > MAX_LINE_LENGTH) {
-			log.error("Line too long {}", line.length());
+	public InternetMessageBuilder addLine(ByteBuf line) {
+		int lineLength = line.readableBytes();
+
+		if(lineLength > MAX_LINE_LENGTH) {
+			log.error("Line too long {}", lineLength);
 			throw new LineTooLongException();
 		}
 
 		switch(state) {
 		case HEADER:
-			if(lastLine != null) { // this is the first header line we do process
-				if(Header.isFolded(line)) { // is the current line folded?
-					if(unfoldedLine == null) { // are we unfolding the first line
-						unfoldedLine = new StringBuilder(lastLine); // append previous line to unfolded line
-					} else {
-						unfoldedLine.append(lastLine);
-					}
-				} else {
-					if(unfoldedLine != null) { // process any previous folded lines
-						unfoldedLine.append(lastLine);
-						headers.addHeader(Header.parse(unfoldedLine));
-						unfoldedLine = null;
-					} else {
-						headers.addHeader(Header.parse(lastLine));
-					}
-				}
+			if(lineLength == 0) { // empty line switches from headers to body
+				finishHeaders();
+				state = State.BODY;
+				break;
 			}
 
-			if(line.length() == 0) { // empty line switches from headers to body
-				/* TODO: is this empty line mandatory?
-				 * NO! The empty line is optional and belongs to the body! see 3.5.  Overall Message Syntax!
-				 * FIXME: how to ensure that the last field/header line is processed correctly?
-				 * introduce an finish() method?!
-				 */
-				state = State.BODY;
-				lastLine = null;
-			} else {
-				lastLine = line;
+			if(!Header.isFolded(line)) {
+				processUnfoldedLine();
 			}
+			unfoldedLine.writeBytes(line);
 			break;
+
 		case BODY:
-			System.out.println("body: " + line);
-			body.addLine(line);
+			ByteBuf l = line.copy();
+			System.out.println("body: " + l.getCharSequence(l.readerIndex(), l.readableBytes(), StandardCharsets.US_ASCII));
+			body.addLine(l);
 			break;
 		}
 		return this;
 	}
 
+	private void finishHeaders() {
+		processUnfoldedLine(); // process any remaining data
+		headers.validate();
+
+		// Decide what body parser/processor to use
+		if(headers.getHeaders().contains(new Header("MIME-Version", "1.0"))) {
+//			body = new RFC2045Body(); //RFC2045
+		} else {
+			body = new RFC5322Body();
+		}
+	}
+
+	private void processUnfoldedLine() {
+		if(unfoldedLine.isReadable()) { // process any previous folded lines
+			headers.addHeader(Header.parse(unfoldedLine));
+			unfoldedLine.clear();
+		}		
+	}
+
 	public InternetMessage build() {
-//		headers.validate(); // check for duplicate headers or not existing mandatory headers
-//		body.validate();
+		if(state == State.HEADER) {
+			finishHeaders();
+		}
+		body.validate();
 		return new InternetMessage(headers, body);
 	}
 

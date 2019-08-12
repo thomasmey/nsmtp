@@ -1,5 +1,7 @@
 package de.m3y3r.nsmtp.model.imf;
 
+import io.netty.buffer.ByteBuf;
+
 /**
  * https://tools.ietf.org/html/rfc5322
  *
@@ -60,24 +62,26 @@ public class Header {
 	}
 
 	/* the header lines must already be unfolded !! */
-	public static Header parse(CharSequence line) {
+	/* this method actually consumes the ByteBuffer */
+	public static Header parse(ByteBuf line) {
 		StringBuilder fieldName = new StringBuilder();
 		StringBuilder fieldBody = new StringBuilder();
 
 		State state = State.FIELD_NAME;
-		for(int i = 0, n = line.length(); i < n; i++) {
-			char c = line.charAt(i);
+		boolean isFirstChar = true;
+		while(line.isReadable()) {
+			byte c = line.readByte();
 			if(state == State.FIELD_NAME) {
 				if(c >= 33 && c <= 126) {
 					// field name character is okay
 					if(c == ':') { // 58!
-						if(i == 0) {
+						if(isFirstChar) {
 							// first char is invalid, ftext must be at least one char, see 3.6.8.  Optional Fields
 							throw new MissingFieldNameException();
 						}
 						state = State.FIELD_BODY;
 					} else {
-						fieldName.append(c);
+						fieldName.append(Character.toChars(c));
 					}
 				} else {
 					throw new IllegalCharacter(state, c);
@@ -85,17 +89,21 @@ public class Header {
 			} else if(state == State.FIELD_BODY) {
 				if(c >= 32 && c <= 126 || c == 9) {
 					// field body character is okay
-					fieldBody.append(c);
+					fieldBody.append(Character.toChars(c));
 				} else {
 					throw new IllegalCharacter(state, c);
 				}
 			}
+
+			isFirstChar = false;
 		}
 
 		if(state == State.FIELD_NAME) {
 			// missing colon!
-			throw new MissingColonException(line);
+			throw new MissingColonException();
 		}
+
+		//TODO: implement RFC1342, which looks hard because if all places it can be used in!
 		Header header = new Header(fieldName.toString(), fieldBody.toString());
 
 		validateHeader(header);
@@ -129,16 +137,11 @@ public class Header {
 	 * @param line
 	 * @return
 	 */
-	public static boolean isFolded(CharSequence line) {
+	public static boolean isFolded(ByteBuf line) {
 		if(line == null) throw new IllegalArgumentException();
 
-		//UGLY: special case: the current line is the break from headers to body, process as unfolded line!
-		if(line.length() == 0) {
-			return false;
-		}
-
-		char c = line.charAt(0);
-		if(c == 32 || c == 9) { // is WSP
+		byte b = line.getByte(line.readerIndex());
+		if(b == 32 || b == 9) { // is WSP
 			return true;
 		}
 		return false;

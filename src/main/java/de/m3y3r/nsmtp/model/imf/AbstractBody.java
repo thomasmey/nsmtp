@@ -4,22 +4,26 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.netty.buffer.ByteBuf;
+
 public abstract class AbstractBody {
 
-	private final List<CharSequence> lines;
+	private final List<ByteBuf> lines;
 
 	public AbstractBody() {
-		lines = new ArrayList<CharSequence>();
+		lines = new ArrayList<>();
 	}
 
-	public List<CharSequence> getLines() {
+	public List<ByteBuf> getLines() {
 		return Collections.unmodifiableList(lines);
 	}
 
-	public void addLine(CharSequence line) {
+	public void addLine(ByteBuf line) {
 		validateLine(line);
 		this.lines.add(line);
 	}
 
-	abstract protected void validateLine(CharSequence line);
+	protected abstract void validateLine(ByteBuf line);
+
+	protected void validate() {};
 }

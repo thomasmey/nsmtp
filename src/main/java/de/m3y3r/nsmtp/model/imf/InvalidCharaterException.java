@@ -2,9 +2,9 @@ package de.m3y3r.nsmtp.model.imf;
 
 public class InvalidCharaterException extends RuntimeException {
 
-	private char c;
+	private byte c;
 
-	public InvalidCharaterException(char c) {
+	public InvalidCharaterException(byte c) {
 		this.c = c;
 	}
 

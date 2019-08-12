@@ -6,7 +6,7 @@ public class IllegalCharacter extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	public IllegalCharacter(State state, char c) {
+	public IllegalCharacter(State state, byte c) {
 	}
 
 }
